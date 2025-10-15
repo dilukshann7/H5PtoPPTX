@@ -27,7 +27,6 @@ jobs:
         run: |
           mkdir artifacts
           powershell Compress-Archive -Path bin\Release\* -DestinationPath artifacts/H5PtoPPTX.zip
-        working-directory: H5PtoPPTX
 
       - name: Bump version and push tag
         id: autotag
@@ -58,6 +57,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: H5PtoPPTX/artifacts/H5PtoPPTX.zip
+          asset_path: artifacts/H5PtoPPTX.zip
           asset_name: H5PtoPPTX.zip
           asset_content_type: application/zip
