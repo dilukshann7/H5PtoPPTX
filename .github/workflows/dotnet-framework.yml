@@ -1,0 +1,65 @@
+name: Build and Auto Release .NET Framework 4.7.2
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Restore NuGet packages
+        run: nuget restore H5PtoPPTX.sln
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build solution
+        run: msbuild H5PtoPPTX.sln /p:Configuration=Release
+
+      - name: Archive Release Output
+        run: |
+          mkdir artifacts
+          powershell Compress-Archive -Path bin\Release\* -DestinationPath artifacts/H5PtoPPTX.zip
+
+      - name: Bump version and push tag
+        id: autotag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          $NEW_TAG = "v$(Get-Date -Format 'yyyyMMddHHmmss')"
+          git tag $NEW_TAG
+          git push origin $NEW_TAG
+          echo "tag=$NEW_TAG" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.autotag.outputs.tag }}
+          release_name: Release ${{ steps.autotag.outputs.tag }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/H5PtoPPTX.zip
+          asset_name: H5PtoPPTX.zip
+          asset_content_type: application/zip
