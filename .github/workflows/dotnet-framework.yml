@@ -30,9 +30,15 @@ jobs:
 
       - name: Bump version and push tag
         id: autotag
-        uses: caarlos0/action-autotag@v1.7.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          NEW_TAG="v$(date +'%Y%m%d%H%M%S')"
+          git tag $NEW_TAG
+          git push origin $NEW_TAG
+          echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         id: create_release
