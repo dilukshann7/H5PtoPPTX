@@ -20,6 +20,9 @@ jobs:
       - name: Restore NuGet packages
         run: nuget restore H5PtoPPTX.sln
 
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
       - name: Build solution
         run: msbuild H5PtoPPTX.sln /p:Configuration=Release
 
